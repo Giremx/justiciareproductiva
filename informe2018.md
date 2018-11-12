@@ -270,21 +270,21 @@ quienes[is.na(quienes)] <- 0
 quienes$padre <- ifelse(quienes$p11_13_1_1==1 | 
                         quienes$p11_13_1_2==1 | 
                         quienes$p11_13_1_3==1 | 
-                          quienes$p11_13_2_1==1 | 
-                          quienes$p11_13_2_2==1 | 
-                          quienes$p11_13_2_3==1 | 
-                            quienes$p11_13_3_1==1 | 
-                            quienes$p11_13_3_2==1 | 
-                            quienes$p11_13_3_3==1 | 
-                              quienes$p11_13_4_1==1 | 
-                              quienes$p11_13_4_2==1 | 
-                              quienes$p11_13_4_3==1 | 
-                                quienes$p11_13_5_1==1 | 
-                                quienes$p11_13_5_2==1 | 
-                                quienes$p11_13_5_3==1 | 
-                                  quienes$p11_13_6_1==1 | 
-                                  quienes$p11_13_6_2==1 | 
-                                  quienes$p11_13_6_3==1, 1,0)
+                        quienes$p11_13_2_1==1 | 
+                        quienes$p11_13_2_2==1 | 
+                        quienes$p11_13_2_3==1 | 
+                        quienes$p11_13_3_1==1 | 
+                        quienes$p11_13_3_2==1 | 
+                        quienes$p11_13_3_3==1 | 
+                        quienes$p11_13_4_1==1 | 
+                        quienes$p11_13_4_2==1 | 
+                        quienes$p11_13_4_3==1 | 
+                        quienes$p11_13_5_1==1 | 
+                        quienes$p11_13_5_2==1 | 
+                        quienes$p11_13_5_3==1 | 
+                        quienes$p11_13_6_1==1 | 
+                        quienes$p11_13_6_2==1 | 
+                        quienes$p11_13_6_3==1, 1,0)
 
 
 quienes$madre <- ifelse(quienes$p11_13_1_1==2 | 
@@ -719,6 +719,309 @@ ggplot(data = data,
 Ahora, ¿será que ésta es la mejor forma de procesar los datos de embarazo adolescente? ¿cuál crees que sea el problema en utilizar residencia habitual de la madre? ¿qué variable geográfica crees que sea más precisa? En nuestro informe utilizamos lugar de ocurrencia, descarga los datos [aquí](http://www.inegi.org.mx/sistemas/olap/Proyectos/bd/continuas/natalidad/nacimientos.asp) y juega con ellos.
 
 Copia y pega este comando en tu consola para deshacerte de todos los objetos que creamos: rm(list=ls(all=TRUE))
+
+***
+
+### Violencia obstétrica
+#### Manifestaciones de VOB
+Para analizar los datos de violencia obstétrica en México, utilizaremos la Encuesta Nacional sobre la Dinámica de las Relaciones (ENDIREH 2016). El marco muestral de esta encuesta son mujeres mayores de 15 años de edad; la representatividad es nacional y estatal: es posible desglosar la información por entidad federativa.
+```{r}
+endireh2016 <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/endireh_limpia.csv")
+```
+
+El cuestionario de esta encuesta está disponible [aquí](http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/especiales/endireh/2016/doc/endireh2016_cuestionario_a.pdf).
+Esta encuesta contiene varias preguntas respecto a si las mujeres han sufrido violencia obstétrica (preguntas 9.8). Si bien es necesario analizar las distintas manifestaciones de este fenómeno, el análisis agregado también es útil. Por lo tanto, seleccionaremos las preguntas relacionadas a este problema y crearemos la variable "alguna" que nos indica si una mujer ha sufrido algún tipo de violencia obstétrica.
+```{r}
+# Selección de preguntas y creación del dataframe "vob"
+vob <- select(endireh2016, starts_with("p9_8"), fac_muj, nom_ent, edad, p9_2,upm,estrato)
+# p9_2 indica si la mujer estuvo embarazada en los últimos 5 años
+vob <- subset(vob, p9_2==1)
+# Creamos variable "alguna"
+vob$alguna <- ifelse(vob$p9_8_1>1 & vob$p9_8_2>1 & vob$p9_8_3>1 & vob$p9_8_4>1 & vob$p9_8_5>1 & vob$p9_8_6>1 & vob$p9_8_7>1 & vob$p9_8_8>1 & vob$p9_8_9>1 & vob$p9_8_10>1, 0, 1)
+```
+
+Esta variable nos indica que el 29.93% de las mujeres que estuvieron embarazadas —en los últimos cinco años— reportan haber sufrido un tipo de violencia obstétrica.
+```{r}
+prop.wtable(vob$alguna,w=vob$fac_muj,dir=0,digits=2,mar=TRUE,na=FALSE)
+```
+
+Respecto a las distintas manifestaciones de violencia obstétrica, crearemos un dataframe con los porcentajes de cada una para, posteriormente, visualizar todo en una sencilla gráfica. En esta parte usaremos el comando prop.wtable para obtener porcentajes ponderados; sin embargo, como se mostrará en otra parte del código, es una mejor práctica utilizar dplyr. Si ya pasaste por esta lección en alguno de nuestros otros módulos, ignora el siguiente código y escríbelo directo en dplyr.
+```{r}
+# Nos quedamos con las mujeres que reportaron haber sufrido algún tipo de violencia obstétrica.
+vob_si <- subset(vob, alguna==1)
+weight_si <- vob_si$fac_muj
+# porc es un dataframe con los porcentajes de tipos de violencia obstétrica reportados
+porc <- rbind.data.frame(prop.wtable(vob_si$p9_8_1,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE),
+                        prop.wtable(vob_si$p9_8_2,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE),
+                        prop.wtable(vob_si$p9_8_3,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE),
+                        prop.wtable(vob_si$p9_8_4,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE),
+                        prop.wtable(vob_si$p9_8_5,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE),
+                        prop.wtable(vob_si$p9_8_6,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE),
+                        prop.wtable(vob_si$p9_8_7,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE),
+                        prop.wtable(vob_si$p9_8_8,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE),
+                        prop.wtable(vob_si$p9_8_9,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE),
+                        prop.wtable(vob_si$p9_8_10,w=weight_si,dir=0,digits=2,mar=TRUE,na=FALSE))
+
+porc$grupo <- seq(0,2,1)
+porc <- subset(porc, grupo==0)
+colnames(porc) <- c("porcent", "tipo")
+porc$tipo <- c("Posiciones incómodas",
+             "Gritos o regaños",
+             "Ofensas",
+             "Fue ignorada",
+             "Anestecia denegada",
+             "Atención tardada por gritos o quejas",
+             "Método a.c. o esterlización forzada",
+             "Presión para aceptar a.c. o esterilización",
+             "Firma involuntaria de papeles",
+             "Fue aislada de su bebé por más de 5 horas")
+attach(porc)
+new_porc <- porc[order(-porcent),] 
+detach(porc)
+# Colores
+col1 = "#D9E1F1" 
+col2 = "#325694"
+# Ploteamos bonito
+ggplot(new_porc,
+       aes(x = reorder(tipo,-porcent),
+           y = porcent,
+           fill = porcent)) +
+  geom_col()  +
+  scale_x_discrete("",
+                   breaks = waiver(),
+                   labels = str_wrap(new_porc$tipo, width = 15)) +
+  scale_fill_gradient(low = col1, high = col2) +
+  geom_text(aes(label = paste0(round(porcent,2),"%")),
+            size = 5, position= position_stack(vjust = 0.5)) +
+  theme(axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  labs(title = "Manifestaciones de violencia obstétrica en México",
+       fill = "Porcentaje %") +
+  coord_flip()
+```
+
+Como se mencionó, el análisis por entidad federativa es posible y necesario. Exploremos cuántos son los casos de violencia obstétrica por entidad federativa: desglosaremos por entidad federativa. Por ejemplo, en Aguascalientes, el 29.93% de las mujeres reportan haber sufrido violencia obstétrica.
+```{r}
+weight <- vob$fac_muj
+prop.wtable(vob$alguna,vob$nom_ent=="Aguascalientes",w=weight,dir=0,digits=2,mar=TRUE,na=FALSE)
+```
+
+Creemos un dataframe con los porcentajes, por entidad federativa. Aquí usaremos dplyr.
+```{r}
+# Agrupamos por entidad
+vob$alguna <- as.numeric(vob$alguna)
+vob_ent <- vob %>%
+  select(alguna, fac_muj, nom_ent)%>%
+  group_by(nom_ent)%>%
+  summarise(total_alguna = sum(alguna*fac_muj, na.rm = TRUE),
+            fac_muj = sum(fac_muj, na.rm = TRUE),
+            porcentaje=(total_alguna/fac_muj)*100)%>%
+  select(nom_ent, porcentaje)
+```
+
+Las entidades con mayor porcentaje de violencia obstétrica son: Estado de México (33.67%), Ciudad de México (32.88%) y Tlaxcala (31.89%). Podemos hacer un sencillo plot para visualizar todas las entidades.
+```{r}
+# Colores
+col1 = "#D9E1F1" 
+col2 = "#325694"
+
+fiuf <- "Porcentaje de mujeres que reportó haber sufrido un tipo de violencia obstétrica, por entidad federativa"
+ggplot(data = vob_ent,
+       aes(x = reorder(nom_ent, porcentaje),
+           y = porcentaje,
+           fill = porcentaje)) + 
+  geom_col() +
+  scale_fill_gradient(low = col1, high = col2) +
+  geom_text(aes(label = paste0(round(porcentaje,2),"%")),
+            size = 5, position= position_stack(vjust = 0.5)) +
+  labs(title = str_wrap(fiuf, width = 65),
+       fill = "%") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank()) +
+  coord_flip()
+```
+
+Ahora haremos un perfil de aquellas mujeres que sufren violencia obstétrica por características socio-económicas:
+* Condición laboral
+* Escolaridad
+* Edad
+* Auto-adscripción indígena
+* Lugar de atención médica
+```{r}
+vob <- select(endireh2016, starts_with("p9_8"), fac_muj, nom_ent, edad,p9_2,upm,estrato)
+vob$alguna <- ifelse(vob$p9_8_1>1 & vob$p9_8_2>1 & vob$p9_8_3>1 & vob$p9_8_4>1 & vob$p9_8_5>1 & vob$p9_8_6>1 & vob$p9_8_7>1 & vob$p9_8_8>1 & vob$p9_8_9>1 & vob$p9_8_10>1, 0, 1)
+```
+
+Agregamos las variables:
+```{r}
+vob$cond_lab <- endireh2016$p2_13
+vob$escolaridad <- endireh2016$niv
+vob$edad <- endireh2016$edad
+vob$indigena <- endireh2016$p2_10
+vob$indigena <- ifelse(vob$indigena>2,2,1)
+vob$lug_at_med <- endireh2016$p9_7
+vob <- subset(vob, p9_2==1)
+```
+
+Condición laboral: no parece haber grandes diferencias entre mujeres que trabajan y aquéllas que no trabajan (30.3% y 29.7%, respectivamente).
+```{r}
+vob$cond_lab[vob$cond_lab == 9] <- NA
+vob_trabaja <- subset(vob, cond_lab==1)
+vob_notrabaja <- subset(vob, cond_lab==2)
+
+prop.wtable(vob_trabaja$alguna,w=vob_trabaja$fac_muj,na = FALSE)
+prop.wtable(vob_notrabaja$alguna,w=vob_notrabaja$fac_muj,na = FALSE)
+```
+
+Escolaridad: esta característica funciona como un *proxy* de ingreso. Al desglosar la información en categorías es posible inferir que sí existen diferencias entre niveles de escolaridad.
+```{r}
+# Primero limpiamos nuestra data
+vob$escolaridad[vob$escolaridad == 99] <- NA
+
+# Ahora creamos categorías, de acuerdo con nivel de escolaridad. En este punto es recomendable consultar el cuestionario de la encuesta.
+vob_noescol <- subset(vob, escolaridad==0)
+vob_basescol <- subset(vob, escolaridad<=4)
+vob_basescol <- subset(vob_basescol, escolaridad>=1)
+vob_tecescol <- subset(vob, escolaridad<=7)
+vob_tecescol <- subset(vob_tecescol, escolaridad>=5)
+vob_normescol <- subset(vob, escolaridad>=8)
+vob_normescol <- subset(vob_normescol, escolaridad<=9)
+vob_licposescol <- subset(vob, escolaridad>=10)
+
+# Juntemos todo en un dataframe
+data <- rbind.data.frame(prop.wtable(vob_noescol$alguna,w=vob_noescol$fac_muj,na=FALSE),
+                         prop.wtable(vob_basescol$alguna,w=vob_basescol$fac_muj,na=FALSE),
+                         prop.wtable(vob_tecescol$alguna,w=vob_tecescol$fac_muj,na=FALSE),
+                         prop.wtable(vob_normescol$alguna,w=vob_normescol$fac_muj,na=FALSE),
+                         prop.wtable(vob_licposescol$alguna,w=vob_licposescol$fac_muj,na=FALSE))
+
+data$grupo <- seq(0,2,1)
+data <- subset(data, grupo==1)
+data$grupo <- c("Sin escolaridad", "Básica", "Técnica",
+                "Normal", "Licenciatura o posgrado")
+colnames(data)[1] <- "porc"
+# Ploteemos
+# Colores
+col1 = "#D9E1F1" 
+col2 = "#325694"
+
+fiuf <- "Porcentaje de mujeres que reportó haber sufrido un tipo de violencia obstétrica, por escolaridad"
+ggplot(data= data,
+       aes(x=reorder(grupo, -porc),
+           y=porc,
+           fill=porc)) +
+  geom_col() + 
+  scale_fill_gradient(low = col1, high = col2) +
+  geom_text(aes(label = paste0(round(porc,1),"%")),
+            size = 5, position= position_stack(vjust = 0.5)) +
+  labs(title = str_wrap(fiuf, width = 100),
+       fill = "%") +
+  theme(axis.title = element_blank(),
+        axis.text.y = element_blank())
+```
+Las mujeres con licenciatura o posgrado son quienes menos se enfrentan al problema de violencia obstétrica.
+
+!!!!Edad: haremos el mismo análisis por grupos de edades. Respecto a esta característica, sí parece haber diferencias significativas: las jóvenes y adolescentes son el grupo poblacional más afectada por este problema.
+```{r}
+vob$edad[vob$edad == 99] <- NA
+vob$edad[vob$edad == 98] <- NA
+vob <- subset(vob, edad<50)
+
+vob$grupos_edad <- ifelse(vob$edad<20, "Adolescentes (15- 19 años)",
+                              ifelse(vob$edad>19 & vob$edad<30, "Jóvenes (20-29 años)",
+                                     ifelse(vob$edad>29 & vob$edad<40, "Adultas 1 (30-39 años)",
+                                            ifelse(vob$edad>39, "Adultas 2 (40-49 años)", "ZETA")))) # este "ZETA" lo ponemos como una bandera para asegurarnos que no nos equivocamos en nuestras condiciones; spoiler alert: ¡no nos equivocamos!
+
+violencia <- vob%>%
+  select(fac_muj, grupos_edad, alguna) %>%
+  group_by(grupos_edad) %>%
+  summarise(total_alguna = sum(alguna*fac_muj, na.rm = T),
+            fac_muj = sum(fac_muj, na.rm = T),
+            porc = total_alguna/fac_muj*100) %>%
+  select(grupos_edad, porc)
+
+col1 = "#D9E1F1" 
+col2 = "#325694"
+
+ggplot(data = violencia,
+       aes(x=reorder(grupos_edad,-porc),
+           y=porc,
+           fill = porc)) +
+  geom_col() +
+  scale_fill_gradient(low = col1,
+                      high = col2) +
+  geom_text(aes(label = paste0(round(porc,2),"%")),
+            size = 5, nudge_y = 1) +
+  xlab("Grupos de edad") + ylab("") + 
+  theme(axis.text.y = element_blank())
+```
+
+Auto-adscripción indígena: el 29.9% de las mujeres auto-adscritas como indígenas reportan haber sufrido un tipo de violencia obstétrica, este porcentaje es muy similar al reportado por mujeres no indígenas (29.94%). Esto se puede deber a un sesgo en el que las personas indígenas tienden a no reportar esta característica (o no identificarse como tal), dados los estereotipos relacionados con ésta.
+```{r}
+ind <- subset(vob, indigena==1)
+noind <- subset(vob, indigena==2)
+prop.wtable(ind$alguna,w=ind$fac_muj,na=FALSE,digits = 2)
+prop.wtable(noind$alguna,w=noind$fac_muj,na=FALSE,digits = 2)
+```
+
+La ENDIREH también nos permite desglosar el fenómeno de violencia obstétrica por lugar de atención médica. El siguiente código no está en dplyr. Date a la tarea de arreglarlo
+```{r}
+vob$lug_at_med[vob$lug_at_med == 99] <- NA
+vob$lug_at_med[vob$lug_at_med == 99] <- NA
+vob$lug_at_med[vob$lug_at_med == 8] <- NA
+vob$lug_at_med[vob$lug_at_med == 9] <- NA
+vob$lug_at_med[vob$lug_at_med == 10] <- NA
+
+vob_centsal <- subset(vob, lug_at_med==1)
+vob_imss <- subset(vob, lug_at_med==2)
+vob_isste <- subset(vob, lug_at_med>=3)
+vob_isste <- subset(vob_isste, lug_at_med<=4)
+vob_est <- subset(vob, lug_at_med==5)
+vob_priv <- subset(vob, lug_at_med>=6)
+vob_priv <- subset(vob_priv, lug_at_med<=7)
+
+
+data <- rbind.data.frame(prop.wtable(vob_centsal$alguna,w=vob_centsal$fac_muj,na=FALSE,digits = 2),
+                 prop.wtable(vob_imss$alguna,w=vob_imss$fac_muj,na=FALSE,digits = 2),
+                 prop.wtable(vob_isste$alguna,w=vob_isste$fac_muj,na=FALSE,digits = 2),
+                 prop.wtable(vob_est$alguna,w=vob_est$fac_muj,na=FALSE,digits = 2),
+                 prop.wtable(vob_priv$alguna,w=vob_priv$fac_muj,na=FALSE,digits = 2))
+
+data$grupo <- seq(0,2,1)
+data <- subset(data, grupo==1)
+
+data$grupo <- c("Centro de Salud",
+              "Clínica/hospital IMSS",
+              "Clínica/hospital ISSSTE",
+              "Otro hospital o clínica pública del estado",
+              "Hospital/clínica/consultorio privado")
+colnames(data)[1] <- "porc"
+
+# Ploteemos
+# Colores
+col1 = "#D9E1F1" 
+col2 = "#325694"
+
+fiuf <- "Violencia obstétrica por lugar de atención médica"
+ggplot(data= data,
+       aes(x=reorder(grupo, -porc),
+           y=porc,
+           fill=porc)) +
+  geom_col() + 
+  scale_fill_gradient(low = col1, high = col2) +
+  geom_text(aes(label = paste0(round(porc,1),"%")),
+            size = 5, position= position_stack(vjust = 0.5)) +
+  labs(title = str_wrap(fiuf, width = 100),
+       fill = "%") +
+  theme(axis.title = element_blank(),
+        axis.text.y = element_blank())
+```
+
+Sí existen diferencias importantes en los reportes de violencia obstétrica por lugar de atención. Al observar los porcentajes, podríamos plantear que las mujeres que pueden costear una clínica privada, tienden a sufrir este problema en menor medida que aquéllas que optan por atención pública.
+
+
 
 ***
 
