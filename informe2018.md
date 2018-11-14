@@ -1,7 +1,7 @@
 ![](https://github.com/Giremx/justiciareproductiva/blob/master/logo-chico.png)
 
 # Informe 2018
-# La Pieza Faltante: Justicia Reproductiva
+## Grupo de Información en Reproducción Elegida
 
 ***
 
@@ -71,9 +71,9 @@ Sys.setlocale("LC_ALL", "es_ES.UTF-8")
 options(scipen=999)
 ```
 
-También es necesario cargar una pequeñita base de datos que contenga las claves y nombres de las entidades federativas (Fuente: INEGI), en caso de que las bases de datos que descarguemos no la contengan o que los nombres sean muy largos.
+Empecemos con algo sencillo que —si nuestras bases lo requieren— nos será muy útil: una pequeñita base de datos que contenga las claves y nombres de las entidades federativas (Fuente: INEGI), en caso de que las bases de datos que descarguemos no la contengan o que los nombres sean muy largos.
 ```{r}
-entidades <- read.csv("https://github.com/Giremx/justiciareproductiva/blob/master/entidades.csv")
+entidades <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/entidades.csv")
 ```
 
 Esta base tiene tres problemas: el primero, los nombres de las columnas son confusos; el segundo, hay nombres muy largos; el tercero, la columna con las claves por entidad está en formato número que no nos sirve. Atendamos los problemas.
@@ -85,11 +85,13 @@ colnames(entidades) <- nombres_entidades
 rm(nombres_entidades)
 ```
 
-Segundo, vamos a cambiar un par de nombres para practicar la función "mapvalues" de plyr.
+Segundo, vamos a cambiar un par de nombres para practicar la función "mapvalues" de plyr. Este paquete es conflictivo... entonces lo prenderemos y apagaremos en este mismo código
 ```{r}
+require(plyr)
 entidades$ent <- mapvalues(entidades$ent, 
-                               from = c("Coahuila de Zaragoza", "Michoacán de Ocampo", "Veracruz de Ignacio de la Llave"), 
-                               to = c("Coahuila", "Michoacán", "Veracruz"), warn_missing = TRUE)
+                           from = c("Coahuila de Zaragoza", "Michoacán de Ocampo", "Veracruz de Ignacio de la Llave"),
+                           to = c("Coahuila", "Michoacán", "Veracruz"))
+detach(package:plyr)
 ```
 
 Por último, cambiemos el formato de "cve_ent". Ojo acá: para las entidades del 1 al 9 hay que agregarles un "0" antes.
@@ -129,7 +131,7 @@ endireh2016 <- select(original, # dataframe que contiene la ENDIREH completa
 
 Abramos la bases de datos
 ```{r}
-endireh2016 <- read.csv("https://github.com/Giremx/justiciareproductiva/blob/master/endireh_limpia.csv")
+endireh2016 <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/endireh_limpia.csv")
 
 # Quedémonos sólo con las adolescentes
 emb_ado <- subset(endireh2016, edad<20)
@@ -231,13 +233,14 @@ ggplot(data = ado_alguna,
   scale_fill_gradient(low = col1, high = col2) +
   geom_text(aes(label = paste0(round(porcentaje,1),"%")),
             size = 5, position= position_stack(vjust = 0.5)) +
-  labs(title = str_wrap(fiuf, width = 50),
+  labs(title = str_wrap(fiuf, width = 75),
        fill = "%") +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.x = element_blank()) +
   coord_flip()
 ```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/embado_viosex_edad.png)
 
 ¿Hay relación? Estimemos un modelo lineal sensishito.
 ```{r}
@@ -270,21 +273,21 @@ quienes[is.na(quienes)] <- 0
 quienes$padre <- ifelse(quienes$p11_13_1_1==1 | 
                         quienes$p11_13_1_2==1 | 
                         quienes$p11_13_1_3==1 | 
-                        quienes$p11_13_2_1==1 | 
-                        quienes$p11_13_2_2==1 | 
-                        quienes$p11_13_2_3==1 | 
-                        quienes$p11_13_3_1==1 | 
-                        quienes$p11_13_3_2==1 | 
-                        quienes$p11_13_3_3==1 | 
-                        quienes$p11_13_4_1==1 | 
-                        quienes$p11_13_4_2==1 | 
-                        quienes$p11_13_4_3==1 | 
-                        quienes$p11_13_5_1==1 | 
-                        quienes$p11_13_5_2==1 | 
-                        quienes$p11_13_5_3==1 | 
-                        quienes$p11_13_6_1==1 | 
-                        quienes$p11_13_6_2==1 | 
-                        quienes$p11_13_6_3==1, 1,0)
+                          quienes$p11_13_2_1==1 | 
+                          quienes$p11_13_2_2==1 | 
+                          quienes$p11_13_2_3==1 | 
+                            quienes$p11_13_3_1==1 | 
+                            quienes$p11_13_3_2==1 | 
+                            quienes$p11_13_3_3==1 | 
+                              quienes$p11_13_4_1==1 | 
+                              quienes$p11_13_4_2==1 | 
+                              quienes$p11_13_4_3==1 | 
+                                quienes$p11_13_5_1==1 | 
+                                quienes$p11_13_5_2==1 | 
+                                quienes$p11_13_5_3==1 | 
+                                  quienes$p11_13_6_1==1 | 
+                                  quienes$p11_13_6_2==1 | 
+                                  quienes$p11_13_6_3==1, 1,0)
 
 
 quienes$madre <- ifelse(quienes$p11_13_1_1==2 | 
@@ -499,7 +502,7 @@ porc <- filter(porc, quien==1)
 porc$quien <- c("padre", "madre", "padrastro/madrastra", "abuelx","hermanx","tix","primx","otrofam","vecinx/conocidx","desconocidx","otro")
 colnames(porc)[1] <- "porc"
 
-fiuf <- "¿Quiénes fueron los agresores de las mujeres que reportaron un embarazo adolescente y sufrieron algún tipo de violencia sexual durante su infancia?"
+fiuf <- "Agresores de las mujeres que reportaron un embarazo adolescente y sufrieron algún tipo de violencia sexual durante su infancia"
 fiuff <- "Las columnas suman más del 100% debido a que la encuesta permite elegir más de un agresor por cada situación."
 ggplot(porc,
        aes(x = reorder(quien, -porc),
@@ -511,9 +514,11 @@ ggplot(porc,
   theme(axis.title.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank()) +
-  ggtitle(subtitle = str_wrap(fiuff, width = 130),
-          label = str_wrap(fiuf, width = 130))
+  ggtitle(subtitle = str_wrap(fiuff, width = 80),
+          label = str_wrap(fiuf, width = 80)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
 ```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/embado_agresores.png)
 
 Tarea: para desglosar la información por agresor, escribe un código con dplyr. ¡Aguas! Acá es necesario tomar en cuenta el factor de expansión.
 
@@ -535,10 +540,9 @@ enadid2014 <- select(original, # dataframe que contiene la ENDIREH completa
 Uno de las falacias recurrentes respecto al embarazo adolescente y al acceso al aborto es que, dado que existen métodos anticonceptivos, las mujeres deberían "hacerse responsables" del producto del embarazo. Uno de los problemas con esta argumentación es que no considera si, efectivamente, el Estado cumple con dos obligaciones: primero, brindar la información pertinente al uso de anticoncepción; segundo, garantizar el acceso a ésta. En este apartado sólo nos enfocaremos a la evaluación del primer punto. Si quieres investigar más respecto a la necesidad insatisfecha de anticonceptivos —para mujeres en edad reproductiva y para mujeres adolescentes—, te recomendamos visitar este sitio de [CONAPO](http://www.conapo.gob.mx/en/CONAPO/Necesidad_Insatisfecha_de_uso_de_metodos_anticonceptivos_2009_y_2014)
 
 Ahora sí, abramos nuestra data:
-!!!PENDIENTE LINK
 ```{r}
 # Conocimiento de anticonceptivos (mujeres en edad reproductiva)
-enadid2014 <- read.csv("bases_informe2018/enadid_limpia.csv")
+enadid2014 <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/enadid_limpia.csv")
 ```
 
 La ENADID 2014 cuenta con dos tipos de preguntas que nos interesan: el conocimiento general de los métodos anticonceptivos ("¿Quisiera usted decirme de qué métodos o medios ha oído hablar?") y el conocimiento funcional de éstos (es decir, si la mujer conoce cómo utilizarlos de forma correcta). Dado que la edad es una variable muy importante en este tema, nuestro análisis se centrará en ésta.
@@ -630,6 +634,7 @@ ggplot(anticoncepcion,
   ylab("") +
   theme(axis.text.y = element_blank())
 ```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/anti_congen.png)
 
 ¿Este conocimiento general en materia de anticoncepción representa un conocimiento funcional? ¿Existe una brecha entre grupos de edades o es homogéneo? Para simplificar este análisis, sólo tomaremos en cuenta el conocimiento funcional de condones masculinos y pastillas anticonceptivas.
 ```{r}
@@ -681,6 +686,7 @@ ggplot(data= conocimientos,
   xlab("Grupos de edad") + ylab("") + 
   theme(axis.text.y = element_blank())
 ```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/anti_congenfunc.png)
 
 Copia y pega este comando en tu consola para deshacerte de todos los objetos que creamos: rm(list=ls(all=TRUE))
 
@@ -688,9 +694,8 @@ Copia y pega este comando en tu consola para deshacerte de todos los objetos que
 La Estrategia Nacional para la Prevención del Embarazo Adolescente, implementada desde 2015, tiene dos objetivos: primero, reducir en 50% la tasa de fecundidad de las adolescentes entre 15 a 19 años; segundo, erradicar embarazos en niñas de 14 años o menos. Dado que es muy pronto para emitir una evaluación integral de esta política pública, nos limitaremos a observar esta tendencia a lo largo del tiempo y por entidad federativa.
 
 Hay muchas formas de analizar esta información: por entidad de ocurrencia, por entidad de registro, por residencia habitual de la madre, etcétera. Elige bien a tu guerrero. Acá trabajaremos con la variable de residencia habitual; los datos son descargables desde los [tabulados de natalidad del INEGI](http://www.beta.inegi.org.mx/app/tabulados/pxweb/inicio.html?rxid=fdd12ae8-d551-46fd-a8b5-b5b159c1c3ea&db=Natalidad&px=Natalidad_2).
-!!!PENDIENTE LINK
 ```{r}
-embado <- read.csv("bases_Informe2018/porc_embado.csv")
+embado <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/porc_embado.csv")
 data <- data.frame(embado$entidad)
 n <- 6
 data <- do.call("rbind", replicate(n, data, simplify = FALSE))
@@ -712,11 +717,116 @@ ggplot(data = data,
   scale_fill_gradient(low = col1, high = col2) +  
   guides(fill=guide_legend(title="%")) +
   labs(title = "% Embarazo Adolescente por entidad",
-       x = "Año", y = "Entidad") +
+       x = "Año", y = "") +
   scale_x_continuous(breaks = data$anio)
 ```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/embado_ent.png)
 
 Ahora, ¿será que ésta es la mejor forma de procesar los datos de embarazo adolescente? ¿cuál crees que sea el problema en utilizar residencia habitual de la madre? ¿qué variable geográfica crees que sea más precisa? En nuestro informe utilizamos lugar de ocurrencia, descarga los datos [aquí](http://www.inegi.org.mx/sistemas/olap/Proyectos/bd/continuas/natalidad/nacimientos.asp) y juega con ellos.
+
+Copia y pega este comando en tu consola para deshacerte de todos los objetos que creamos: rm(list=ls(all=TRUE))
+
+***
+
+### Muerte Materna
+En el año 2000, uno de los Objetivos de Desarrollo del Milenio (ODM), propuestos por la Organización de Naciones Unidas y firmados por México, fue reducir la mortalidad materna en 75%; es decir, registrar alrededor de 22 muertes maternas por cada 100 mil nacidos vivos. ¿Se habrá cumplido el objetivo?
+
+Abrimos nuestra data:
+```{r}
+mm <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/mm_tasa.csv")
+```
+
+Esta base de datos fue construida con base en dos fuentes:
+* Los datos reportados entre 2002 y 2014, corresponden a los calculados por el Observatorio de Muerte Materna (OMM). El OMM utiliza datos reportados por la Secretaría de Salud.
+* Los datos reportados en 2015 y 2016, fueron calculados con base en las estadísticas de natalidad y defunciones para calcular la muerte materna de INEGI, pues la información usada por el OMM (estadísticas reportadas por Secretaría de Salud) no se encontraba disponible.
+
+Ahora, nos vamos a quedar con un objeto que sólo tenga la RMM nacional:
+```{r}
+mm_nac <- mm[33,]
+mm_nac <- mm_nac[c(2:16)]
+mm_nac <- t(mm_nac)
+mm_nac <- as.data.frame(mm_nac)
+colnames(mm_nac) <- "mm_nac"
+mm_nac$anio <- seq(2002,2016,1)
+```
+
+El objetivo lo podemos sacar al resolver una ecuación bastante sencilla: primero, nuestras "x" son los años y nuestras "y" es la Razón de Muerte Materna; segundo, tenemos las coordenadas de dos puntos de nuestra línea objetivo:
+$x~1~ = 2002; x~2~ = 2015$
+$y~1~ = 54.18; y~2~ = 22$
+Por lo tanto, podemos obtener la pendiente "m" si resolvemos la siguiente ecuación:
+$m = (y~2~ - y~1~) / (x~2~ - x~1~)$
+```{r}
+x1 <- 2002
+x2 <- 2015
+y1 <- 54.18
+y2 <- 22
+m <- (y2-y1)/(x2-x1)
+b <- y2-m*x2
+eq = function(x){
+  m*x+b
+}
+```
+
+Ésta es nuestra línea objetivo
+```{r}
+ggplot(data.frame(x=c(0, 10)), aes(x=x)) + 
+  stat_function(fun=eq, geom="line", size=1.5) +
+  xlab("Año") + ylab("RMM") + 
+  xlim(2002,2017)
+```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/mm_obj.png)
+
+Ahora ploteemos el objetivo y la RMM nacional:
+```{r}
+fiuff <- "Razón de muerte materna en México (2002-2016)"
+fiuf <- "Uno de los objetivos del milenio firmados por México fue reducir la mortalidad materna en 75% para 2015; es decir, registrar 22 muertes maternas por cada 100 mil nacidos vivos. Este objetivo, como lo muestra la gráfica, no se cumplió."
+
+ggplot(data=mm_nac, aes(anio)) + 
+  geom_line(aes(y = mm_nac, color="Nacional"))  + 
+  stat_function(fun=eq, geom="line", aes(color="Objetivo")) +
+  scale_color_manual("",
+                     values = c("red","blue")) +
+  ggtitle(subtitle = str_wrap(fiuf, width = 100), label = fiuff) +
+  xlab("Año") +
+  ylab("Razón de Muerte Materna") 
+```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/mm_nac.png)
+
+Otro factor importante que analizar es la RMM por entidad federativa. Esta información ya la tenemos en nuestro df "mm".
+
+Una forma bonita para visualizarla es hacer un mapa de calor. Tenemos que crear un dataframe adecuado para hacerlo.
+```{r}
+# Dropeamos el nacional
+mm <- mm[1:32,]
+# Creamos un dataframe con entidades y años en columnas
+data <- data.frame(mm$Entidad)
+colnames(data) <- "entidad"
+n <- 15
+data <- do.call("rbind", replicate(n, data, simplify = FALSE))
+# Agregamos los años para cada entidad
+data$anio <- rep(2002:2016, times=1, each=32)
+
+# Y ahora asignaremos cada valor a su respectiva entidad
+mm <- mm[c(-1)]
+mm <-  tidyr::gather(mm)
+data$rmm <- mm$value
+
+# Colores
+col1 = "#D9E1F1" 
+col2 = "#325694"
+anio <- data$anio
+
+# ploteamos
+ggplot(data = data, 
+       aes(x = anio, y = fct_rev(entidad))) + 
+  geom_tile(aes(fill = rmm), colour = "white") +
+  scale_fill_gradient(low = col1, high = col2) +  
+  guides(fill=guide_legend(title="RMM")) +
+  labs(title = "Razón de Muerte Materna, por entidad",
+       x = "Año", y = "Entidad") +
+  scale_x_continuous(breaks = anio)
+```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/mm_ent.png)
 
 Copia y pega este comando en tu consola para deshacerte de todos los objetos que creamos: rm(list=ls(all=TRUE))
 
@@ -800,6 +910,7 @@ ggplot(new_porc,
        fill = "Porcentaje %") +
   coord_flip()
 ```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/vob_manifest.png)
 
 Como se mencionó, el análisis por entidad federativa es posible y necesario. Exploremos cuántos son los casos de violencia obstétrica por entidad federativa: desglosaremos por entidad federativa. Por ejemplo, en Aguascalientes, el 29.93% de las mujeres reportan haber sufrido violencia obstétrica.
 ```{r}
@@ -842,10 +953,10 @@ ggplot(data = vob_ent,
         axis.text.x = element_blank()) +
   coord_flip()
 ```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/vob_ent.png)
 
 Ahora haremos un perfil de aquellas mujeres que sufren violencia obstétrica por características socio-económicas:
 * Condición laboral
-* Escolaridad
 * Edad
 * Auto-adscripción indígena
 * Lugar de atención médica
@@ -875,55 +986,7 @@ prop.wtable(vob_trabaja$alguna,w=vob_trabaja$fac_muj,na = FALSE)
 prop.wtable(vob_notrabaja$alguna,w=vob_notrabaja$fac_muj,na = FALSE)
 ```
 
-Escolaridad: esta característica funciona como un *proxy* de ingreso. Al desglosar la información en categorías es posible inferir que sí existen diferencias entre niveles de escolaridad.
-```{r}
-# Primero limpiamos nuestra data
-vob$escolaridad[vob$escolaridad == 99] <- NA
-
-# Ahora creamos categorías, de acuerdo con nivel de escolaridad. En este punto es recomendable consultar el cuestionario de la encuesta.
-vob_noescol <- subset(vob, escolaridad==0)
-vob_basescol <- subset(vob, escolaridad<=4)
-vob_basescol <- subset(vob_basescol, escolaridad>=1)
-vob_tecescol <- subset(vob, escolaridad<=7)
-vob_tecescol <- subset(vob_tecescol, escolaridad>=5)
-vob_normescol <- subset(vob, escolaridad>=8)
-vob_normescol <- subset(vob_normescol, escolaridad<=9)
-vob_licposescol <- subset(vob, escolaridad>=10)
-
-# Juntemos todo en un dataframe
-data <- rbind.data.frame(prop.wtable(vob_noescol$alguna,w=vob_noescol$fac_muj,na=FALSE),
-                         prop.wtable(vob_basescol$alguna,w=vob_basescol$fac_muj,na=FALSE),
-                         prop.wtable(vob_tecescol$alguna,w=vob_tecescol$fac_muj,na=FALSE),
-                         prop.wtable(vob_normescol$alguna,w=vob_normescol$fac_muj,na=FALSE),
-                         prop.wtable(vob_licposescol$alguna,w=vob_licposescol$fac_muj,na=FALSE))
-
-data$grupo <- seq(0,2,1)
-data <- subset(data, grupo==1)
-data$grupo <- c("Sin escolaridad", "Básica", "Técnica",
-                "Normal", "Licenciatura o posgrado")
-colnames(data)[1] <- "porc"
-# Ploteemos
-# Colores
-col1 = "#D9E1F1" 
-col2 = "#325694"
-
-fiuf <- "Porcentaje de mujeres que reportó haber sufrido un tipo de violencia obstétrica, por escolaridad"
-ggplot(data= data,
-       aes(x=reorder(grupo, -porc),
-           y=porc,
-           fill=porc)) +
-  geom_col() + 
-  scale_fill_gradient(low = col1, high = col2) +
-  geom_text(aes(label = paste0(round(porc,1),"%")),
-            size = 5, position= position_stack(vjust = 0.5)) +
-  labs(title = str_wrap(fiuf, width = 100),
-       fill = "%") +
-  theme(axis.title = element_blank(),
-        axis.text.y = element_blank())
-```
-Las mujeres con licenciatura o posgrado son quienes menos se enfrentan al problema de violencia obstétrica.
-
-!!!!Edad: haremos el mismo análisis por grupos de edades. Respecto a esta característica, sí parece haber diferencias significativas: las jóvenes y adolescentes son el grupo poblacional más afectada por este problema.
+Edad: haremos el mismo análisis por grupos de edades. Respecto a esta característica, sí parece haber diferencias significativas: las jóvenes y adolescentes son el grupo poblacional más afectada por este problema.
 ```{r}
 vob$edad[vob$edad == 99] <- NA
 vob$edad[vob$edad == 98] <- NA
@@ -957,6 +1020,7 @@ ggplot(data = violencia,
   xlab("Grupos de edad") + ylab("") + 
   theme(axis.text.y = element_blank())
 ```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/vob_edad.png)
 
 Auto-adscripción indígena: el 29.9% de las mujeres auto-adscritas como indígenas reportan haber sufrido un tipo de violencia obstétrica, este porcentaje es muy similar al reportado por mujeres no indígenas (29.94%). Esto se puede deber a un sesgo en el que las personas indígenas tienden a no reportar esta característica (o no identificarse como tal), dados los estereotipos relacionados con ésta.
 ```{r}
@@ -1016,116 +1080,14 @@ ggplot(data= data,
   labs(title = str_wrap(fiuf, width = 100),
        fill = "%") +
   theme(axis.title = element_blank(),
-        axis.text.y = element_blank())
+        axis.text.y = element_blank()) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15))
 ```
+![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/vob_lugatmed.png)
 
 Sí existen diferencias importantes en los reportes de violencia obstétrica por lugar de atención. Al observar los porcentajes, podríamos plantear que las mujeres que pueden costear una clínica privada, tienden a sufrir este problema en menor medida que aquéllas que optan por atención pública.
 
-
-
-***
-
-### Muerte Materna
-En el año 2000, uno de los Objetivos de Desarrollo del Milenio (ODM), propuestos por la Organización de Naciones Unidas y firmados por México, fue reducir la mortalidad materna en 75%; es decir, registrar alrededor de 22 muertes maternas por cada 100 mil nacidos vivos. ¿Se habrá cumplido el objetivo?
-
-Abrimos nuestra data: (!!!PENDIENTE LINK)
+Esta encuesta también nos proporciona información respecto a consentimiento en los procedimientos de césares y los índices de cesáreas practicadas por lugar de atención médica y entidad federativa. Se reportó que al 9.69% de las mujeres a las que se le practicó una césarea no se le pidió autorización para llevarlo a cabo.
 ```{r}
-mm <- read.csv("bases_Informe2018/mm_tasa.csv")
+prop.wtable(vob$p9_8_13,w=vob$fac_muj,na=FALSE,digits = 2)
 ```
-
-Esta base de datos fue construida con base en dos fuentes:
-* Los datos reportados entre 2002 y 2014, corresponden a los calculados por el Observatorio de Muerte Materna (OMM). El OMM utiliza datos reportados por la Secretaría de Salud.
-* Los datos reportados en 2015 y 2016, fueron calculados con base en las estadísticas de natalidad y defunciones para calcular la muerte materna de INEGI, pues la información usada por el OMM (estadísticas reportadas por Secretaría de Salud) no se encontraba disponible.
-
-Ahora, nos vamos a quedar con un objeto que sólo tenga la RMM nacional:
-```{r}
-mm_nac <- mm[33,]
-mm_nac <- mm_nac[c(2:16)]
-mm_nac <- t(mm_nac)
-mm_nac <- as.data.frame(mm_nac)
-colnames(mm_nac) <- "mm_nac"
-mm_nac$anio <- seq(2002,2016,1)
-```
-
-El objetivo lo podemos sacar al resolver una ecuación bastante sencilla: primero, nuestras "x" son los años y nuestras "y" es la Razón de Muerte Materna; segundo, tenemos las coordenadas de dos puntos de nuestra línea objetivo:
-$x~1~ = 2002; x~2~ = 2015$
-$y~1~ = 54.18; y~2~ = 22$
-Por lo tanto, podemos obtener la pendiente "m" si resolvemos la siguiente ecuación:
-$m = (y~2~ - y~1~) / (x~2~ - x~1~)$
-```{r}
-x1 <- 2002
-x2 <- 2015
-y1 <- 54.18
-y2 <- 22
-m <- (y2-y1)/(x2-x1)
-b <- y2-m*x2
-eq = function(x){
-  m*x+b
-}
-```
-
-Ésta es nuestra línea objetivo
-```{r}
-col1 = "#D9E1F1" 
-ggplot(data.frame(x=c(0, 10)), aes(x=x)) + 
-  stat_function(fun=eq, geom="line", size=1.5) +
-  xlab("Año") + ylab("RMM") + 
-  xlim(2002,2017)
-```
-
-Ahora ploteemos el objetivo y la RMM nacional:
-```{r}
-fiuff <- "Razón de muerte materna en México (2002-2016)"
-fiuf <- "Uno de los objetivos del milenio firmados por México fue reducir la mortalidad materna en 75% para 2015; es decir, registrar 22 muertes maternas por cada 100 mil nacidos vivos. Este objetivo, como lo muestra la gráfica, no se cumplió."
-
-ggplot(data=mm_nac, aes(anio)) + 
-  geom_line(aes(y = mm_nac, color="Nacional"))  + 
-  stat_function(fun=eq, geom="line", aes(color="Objetivo")) +
-  scale_color_manual("",
-                     values = c("red","blue")) +
-  ggtitle(subtitle = str_wrap(fiuf, width = 100), label = fiuff) +
-  xlab("Año") +
-  ylab("Razón de Muerte Materna") 
-```
-
-Otro factor importante que analizar es la RMM por entidad federativa. Esta información ya la tenemos en nuestro df "mm".
-
-Una forma bonita para visualizarla es hacer un mapa de calor. Tenemos que crear un dataframe adecuado para hacerlo.
-```{r}
-# Dropeamos el nacional
-mm <- mm[1:32,]
-# Creamos un dataframe con entidades y años en columnas
-data <- data.frame(mm$Entidad)
-colnames(data) <- "entidad"
-n <- 15
-data <- do.call("rbind", replicate(n, data, simplify = FALSE))
-# Agregamos los años para cada entidad
-data$anio <- rep(2002:2016, times=1, each=32)
-
-# Y ahora asignaremos cada valor a su respectiva entidad
-mm <- mm[c(-1)]
-mm <-  tidyr::gather(mm)
-data$rmm <- mm$value
-
-# Colores
-col1 = "#D9E1F1" 
-col2 = "#325694"
-anio <- data$anio
-
-# ploteamos
-ggplot(data = data, 
-       aes(x = anio, y = fct_rev(entidad))) + 
-  geom_tile(aes(fill = rmm), colour = "white") +
-  scale_fill_gradient(low = col1, high = col2) +  
-  guides(fill=guide_legend(title="RMM")) +
-  labs(title = "Razón de Muerte Materna, por entidad",
-       x = "Año", y = "Entidad") +
-  scale_x_continuous(breaks = anio)
-```
-
-Copia y pega este comando en tu consola para deshacerte de todos los objetos que creamos: rm(list=ls(all=TRUE))
-
-***
-
-
-
