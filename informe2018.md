@@ -6,7 +6,7 @@
 
 ***
 
-El siguiente documento contiene el código utlizado para analizar y visualizar los datos publicados en nuestro Informe "La Pieza Faltante Justicia Reproductiva".
+El siguiente documento contiene el código utlizado para analizar y visualizar los datos publicados en nuestro informe _La Pieza Faltante_.
 
 Todas las bases de datos -utilizadas y construídas- se encuentran en nuestro repositorio. Por lo tanto, si trabajas con este código, las ligas a éstas serán suficientes: no es necesario descargarlas, a menos de que así lo desees.
 
