@@ -1,11 +1,11 @@
 ![](https://github.com/Giremx/justiciareproductiva/blob/master/logo-chico.png)
 
-# Informe 2018
+# La Pieza Faltante Justicia Reproductiva
 ## Grupo de Información en Reproducción Elegida
 
 ***
 
-El siguiente documento contiene el código utlizado para analizar y visualizar los datos publicados en nuestro Informe "La Pieza Faltante: Justicia Reproductiva".
+El siguiente documento contiene el código utlizado para analizar y visualizar los datos publicados en nuestro Informe "La Pieza Faltante Justicia Reproductiva".
 
 Todas las bases de datos -utilizadas y construídas- se encuentran en nuestro repositorio. Por lo tanto, si trabajas con este código, las ligas a éstas serán suficientes: no es necesario descargarlas, a menos de que así lo desees.
 
