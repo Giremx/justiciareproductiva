@@ -1,6 +1,7 @@
 ![](https://github.com/Giremx/justiciareproductiva/blob/master/logo-chico.png)
 
-# La Pieza Faltante Justicia Reproductiva
+# La Pieza Faltante 
+# Justicia Reproductiva
 ## Grupo de Información en Reproducción Elegida
 
 ***
