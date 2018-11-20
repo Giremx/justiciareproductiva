@@ -243,7 +243,7 @@ ggplot(data = ado_alguna,
 ```
 ![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/embado_viosex_edad.png)
 
-¿Hay relación? Estimemos un modelo lineal sensishito.
+¿Hay relación? Estimemos un modelo lineal sencillo.
 ```{r}
 # Diseño del modelo
 design <- svydesign(data = ado, # base de datos
