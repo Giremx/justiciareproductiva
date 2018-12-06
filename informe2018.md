@@ -6,13 +6,13 @@
 
 ***
 
-El siguiente documento contiene el código utlizado para analizar y visualizar los datos publicados en nuestro informe _La pieza faltante_.
+En este apartado encontrarás el código utlizado por GIRE para analizar y visualizar los datos publicados en el informe _La pieza faltante_.
 
-Todas las bases de datos -utilizadas y construídas- se encuentran en nuestro repositorio. Por lo tanto, si trabajas con este código, las ligas a éstas serán suficientes: no es necesario descargarlas, a menos de que así lo desees.
+Todas las bases de datos -utilizadas y construídas- se encuentran en nuestro repositorio. Si trabajas con este código, las ligas a éstas serán suficientes: no es necesario descargarlas, a menos de que así lo desees.
 
-Éste es un esfuerzo para brindar más información de forma más transparente.
+Éste es un esfuerzo para brindar información de forma más transparente.
 
-Los temas se dividieron de la siguiente manera:
+Los temas tratados en el informe son los siguientes:
 * Embarazo adolescente
 * Penalización del aborto
 * Violencia obstétrica
@@ -22,29 +22,29 @@ Los temas se dividieron de la siguiente manera:
 ***
 
 ### Paquetes requeridos
-Forma arcaica de prender paquetes: usamos el comando library() o require(). Acá debemos ser cuidadosas, pues si no tenemos instalados los paquetes el comando no funcionará.
+Forma arcaica de prender paquetes: usamos el comando library() o require(). Es importante aclarar que, si no tenemos instalados los paquetes, el comando no funcionará.
 ```{r}
-# Estas dos bibliotecas las usamos para abrir bases de datos en distintos formatos
+# Estas dos bibliotecas las usamos para abrir bases de datos en distintos formatos.
 library(haven)
 library(foreign)
 library(Hmisc)
-# Estas bibliotecas probablemente sean las más importantes: nos permiten manejar, transformar y analizar bases de datos
+# Estas bibliotecas probablemente sean las más importantes: nos permiten manejar, transformar y analizar bases de datos.
 library(dplyr)
 library(tidyr)
-# Los siguientes paquetes se usan para visualización de datos
+# Los siguientes paquetes se usan para visualización de datos.
 library(ggplot2)
 library(ggalt)
 library(ggthemes)
 library(devtools)
-# También tenemos que cargar paquetes que nos permitan visualizar mapas
+# También tenemos que cargar paquetes que nos permitan visualizar mapas.
 library(maps)
 library(mapdata)
 library(ggmap)
-# Estas bibliotecas son necesarias para el análisis adecuado de bases de datos generadas a partir de encuestas
+# Estas bibliotecas son necesarias para el análisis adecuado de bases de datos generadas a partir de encuestas.
 library(forcats)
 library(survey)
 library(GDAtools)
-# Las siguientes librerías sirven para extraer datos de un PDF
+# Las siguientes librerías sirven para extraer datos de un PDF.
 library(tm)
 library(pdftools)
 library(stringr)
@@ -52,7 +52,7 @@ library(janitor)
 # library(data.table) pendiente
 ```
 
-Un hack para evitar enredos: usar el paquete "pacman". Pacman instala, en caso de ser necesario, y prende el paquete.
+Para evitar complicaciones, usa el paquete "Pacman", que instala y, en caso de ser necesario, prende el paquete.
 ```{r}
 # Instalamos pacman
 # install.packages("pacman")
@@ -64,7 +64,7 @@ p_load(tidyverse, # el universo tidy carga varios paquetes: dplyr, tidyr, ggplot
        tm, pdftools, stringr, janitor) # para extraer datos de un PDF.
 ```
 
-Dos comandos bien importantes:
+Dos comandos importantes:
 ```{r}
 # Este comando permite que R lea la "ñ" y los acentos.
 Sys.setlocale("LC_ALL", "es_ES.UTF-8")
@@ -72,12 +72,12 @@ Sys.setlocale("LC_ALL", "es_ES.UTF-8")
 options(scipen=999)
 ```
 
-Empecemos con algo sencillo que —si nuestras bases lo requieren— nos será muy útil: una pequeñita base de datos que contenga las claves y nombres de las entidades federativas (Fuente: INEGI), en caso de que las bases de datos que descarguemos no la contengan o que los nombres sean muy largos.
+Empecemos con algo sencillo que —si nuestras bases lo requieren— nos será muy útil: una pequeña base de datos que contenga las claves y nombres de las entidades federativas (Fuente: INEGI), en caso de que las bases de datos que descarguemos no la contengan o que los nombres sean muy largos.
 ```{r}
 entidades <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/entidades.csv")
 ```
 
-Esta base tiene tres problemas: el primero, los nombres de las columnas son confusos; el segundo, hay nombres muy largos; el tercero, la columna con las claves por entidad está en formato número que no nos sirve. Atendamos los problemas.
+Esta base tiene tres problemas: 1) los nombres de las columnas son confusos; 2) hay nombres muy largos; 3) la columna con las claves por entidad está en formato número, que no nos sirve. Atendamos los problemas.
 
 Primero los nombres de las columnas:
 ```{r}
@@ -86,7 +86,7 @@ colnames(entidades) <- nombres_entidades
 rm(nombres_entidades)
 ```
 
-Segundo, vamos a cambiar un par de nombres para practicar la función "mapvalues" de plyr. Este paquete es conflictivo... entonces lo prenderemos y apagaremos en este mismo código
+Segundo, vamos a cambiar un par de nombres para practicar la función "mapvalues" de plyr. Este paquete es conflictivo, así que lo prenderemos y apagaremos en este mismo código.
 ```{r}
 require(plyr)
 entidades$ent <- mapvalues(entidades$ent, 
@@ -95,7 +95,7 @@ entidades$ent <- mapvalues(entidades$ent,
 detach(package:plyr)
 ```
 
-Por último, cambiemos el formato de "cve_ent". Ojo acá: para las entidades del 1 al 9 hay que agregarles un "0" antes.
+Por último, cambiemos el formato de "cve_ent". Importante: para las entidades del 1 al 9 hay que agregarles un "0" antes.
 ```{r}
 # Usemos formatC
 entidades$cve_ent <- formatC(entidades$cve_ent, width = 2, # mínimo ancho
@@ -109,15 +109,15 @@ entidades$cve_ent <- as.character(entidades$cve_ent)
 ***
 
 ### Embarazo adolescente
-Este apartado tiene varias fuentes de información; seamos ordenadas y exploremos conforme se presenta en nuestro informe impreso.
+Este apartado tiene varias fuentes de información. El orden a seguir será conforme se presenta en nuestro informe impreso.
 
 #### Violencia sexual
 ¿Existe una relación entre embarazo adolescente y violencia sexual? 
-Utilicemos la Encuesta Nacional sobre la Dinámica de las Relaciones (ENDIREH 2016) para tratar de contestar esta pregunta. Recordemos: el marco muestral de esta encuesta son mujeres mayores de 15 años de edad; la representatividad es nacional y estatal -es posible desglosar la información por entidad federativa.
+Utilizamos la Encuesta Nacional sobre la Dinámica de las Relaciones (ENDIREH 2016) para tratar de contestar esta pregunta. Recuerda: el marco muestral de esta encuesta son mujeres mayores de 15 años de edad, la representatividad es nacional y estatal: es posible desglosar la información por entidad federativa.
 
 Una observación antes de abrir esta (y otras bases de datos): con el objetivo de optimizar el espacio usado en nuestra nube, la base de datos disponible en el repositorio sólo cuenta con las variables que se utilizan en éste u otros apartados.
 
-Desde acá puedes descargar la [ENDIREH 2016](http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/especiales/endireh/2016/microdatos/bd_mujeres_endireh2016_sitioinegi_stata.zip); para seleccionar las variables que usamos, corre el siguiente código:
+Desde aquí puedes descargar la [ENDIREH 2016](http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/especiales/endireh/2016/microdatos/bd_mujeres_endireh2016_sitioinegi_stata.zip). Para seleccionar las variables que usamos, corre el siguiente código:
 ```{r}
 endireh2016 <- select(original, # dataframe que contiene la ENDIREH completa
                  id_muj, cve_ent, nom_ent, cve_mun, nom_mun, # id y geográficas
@@ -130,36 +130,36 @@ endireh2016 <- select(original, # dataframe que contiene la ENDIREH completa
                  p12_2, p12_6, p12_7) # tuvo un embarazo adolescente, edad y consentimiento de primera relación sexual
 ```
 
-Abramos la bases de datos
+Abre la base de datos:
 ```{r}
 endireh2016 <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/endireh_limpia.csv")
 
-# Quedémonos sólo con las adolescentes
+# Observa sólo la información sobre adolescentes.
 emb_ado <- subset(endireh2016, edad<20)
 weight <- emb_ado$fac_muj
 names(emb_ado)[names(emb_ado) == 'p9_2'] <- 'embarazo'
 ```
 
-El 14.2% de las mujeres entre 15 y 19 años de edad, reportaron haber estado embarazadas en los últimos 5 años.
+Entre las mujeres de 15 a 19 años de edad, 14.2% reportaron haber estado embarazadas en los últimos cinco años.
 ```{r}
 prop.wtable(emb_ado$embarazo, w = weight, digits = 2, na = FALSE)
 ```
 
 Violencia en la infancia
-Seleccionemos nuestras variables:
+Selecciona variables:
 ```{r}
 viosex <- select(endireh2016, 
                  starts_with("p11_12"),
                  starts_with("p11_13"), fac_muj, upm, estrato)
 ```
 
-Creemos la variable "alguna" que refiere a si la mujer sufrió o no algún tipo de violencia sexual durante la infancia; para esto usaremos "ifelse":
+Crea la variable "alguna" que se refiere a si la mujer sufrió o no algún tipo de violencia sexual durante la infancia. Para esto usarás "ifelse":
 ```{r}
 viosex$alguna <- ifelse(viosex$p11_12_1>1 & viosex$p11_12_2>1 & viosex$p11_12_3>1 & viosex$p11_12_4>1 & viosex$p11_12_5>1 & viosex$p11_12_6>1, 
                      0, 1)
 ```
 
-Añadamos un par de variables sociodemográficas
+Añade un par de variables sociodemográficas:
 ```{r}
 viosex$escolaridad <- endireh2016$niv
 viosex$embarazo <- ifelse(endireh2016$p9_2==1,1,0)
@@ -168,7 +168,7 @@ viosex$embado <- as.numeric(viosex$embado)
 viosex$edad <- endireh2016$edad
 viosex$indigena <- endireh2016$p2_10
 viosex$indigena <- ifelse(viosex$indigena>2,2,1)
-# Acá hay que ser extra cuidadosas con los missing values
+# Aquí hay que ser especialmente cuidadosas con los missing values:
 viosex$edadsex <- endireh2016$p12_6
 viosex$edadsex <- as.numeric(viosex$edadsex)
 viosex$edadsex[viosex$edadsex==1099] <- NA
@@ -177,7 +177,7 @@ viosex$edadsex[viosex$edadsex==109] <- NA
 viosex$edadsex[viosex$edadsex==108] <- NA
 viosex$consentimiento <- endireh2016$p12_7
 viosex$consentimiento <- as.numeric(viosex$consentimiento)
-# Las siguientes variables deben ser numéricas para poder hacer condiciones; éstas refieren a si la mujer sufrió algún tipo de violencia sexual y por parte de quién
+# Las siguientes variables deben ser numéricas para poder hacer condiciones. Éstas se refieren a si la mujer sufrió algún tipo de violencia sexual y por parte de quién:
 viosex$p11_13_1_1 <- as.numeric(viosex$p11_13_1_1)
 viosex$p11_13_1_2 <- as.numeric(viosex$p11_13_1_2)
 viosex$p11_13_1_3 <- as.numeric(viosex$p11_13_1_3)
@@ -203,17 +203,17 @@ viosex$p11_13_6_2 <- as.numeric(viosex$p11_13_6_2)
 viosex$p11_13_6_3 <- as.numeric(viosex$p11_13_6_3)
 ```
 
-¿Existe relación entre la edad de primer embarazo y haber sufrido violencia sexual durante la infancia?
-De las mujeres que tuvieron un hijo antes de los 20 años, el 11.82% sufrió algún tipo de violencia sexual.
+¿Existe relación entre violencia sexual durante la infancia y la edad en que ocurrió el primer embarazo?
+De las mujeres que tuvieron un hijo antes de los 20 años, 11.82% sufrió algún tipo de violencia sexual.
 ```{r}
-# Quedémonos con las mujeres que tuvieron un embarazo antes de los 20
+# Utilicemos datos sobre mujeres que tuvieron un embarazo antes de los 20 años.
 ado <- subset(viosex, embado<20)
 prop.wtable(ado$alguna, w = ado$fac_muj, digits = 2, na = FALSE)
 ```
 
-Hagamos una gráfica: violencia sexual en la infancia por edad de primer embarazo.
+Hagamos una gráfica: violencia sexual en la infancia por edad del primer embarazo.
 ```{r}
-# Ésta es nuestra primera pipa en dplyr; como veremos más adelante, hacer esto es muchísimo más fácil que rbindear muchos prop.wtable().
+# Ésta es nuestra primera pipa en dplyr. Como veremos más adelante, hacer esto es mucho más fácil que bindear muchos prop.wtable().
 ado_alguna <- ado %>% # base de datos que transformaremos
   select(alguna, fac_muj, embado)%>% # variables seleccionadas
   group_by(embado) %>% # variable por la que se agrupará
@@ -257,20 +257,20 @@ svymod1 <- svyglm(alguna ~ # variable dependiente
                   family = "binomial") # familia binomial porque "alguna" es dummy
 ```
 
-Entre las mujeres que reportaron un embarazo adolescente, parece haber una relación negativa: entre mayor se sea al momento de tener la primer relación sexual, se tiende a no haber sufrido algún tipo de violencia sexual durante la infancia:
+Entre las mujeres que reportaron un embarazo adolescente, parece haber una relación negativa: entre mayor edad al momento de tener la primera relación sexual, disminuyen los reportes de violencia sexual durante la infancia:
 ```{r}
 p_load(stargazer) # este paquete imprime bonito los outputs
 stargazer(svymod1, type = "text")
 ```
 
-Ahora, analicemos a los agresores. Acá, a diferencia del código anterior, usaremos prop.wtable(). ¿La razón? observar lo maravilloso que es dplyr.
+Ahora, analicemos a los agresores. Para ello, a diferencia del código anterior, usaremos prop.wtable(). ¿La razón? Observar lo maravilloso que es dplyr.
 ```{r}
-# Quedémonos con sólo aquellas mujeres que sí sufrieron un tipo de violencia sexual durante la infancia
+# Trabajaremos sólo con el número de mujeres que sí sufrieron algún tipo de violencia sexual durante la infancia.
 quienes <- subset(ado, alguna == 1)
 quienes <- select(quienes, starts_with("p11_13"), fac_muj)
 quienes[is.na(quienes)] <- 0
 
-# Las siguientes condiciones son necesarias por dos razones: primero, que hay muchas formas de violencia sexual; segundo, que la encuesta permite listar hasta tres tipos de agresor.
+# Las siguientes condiciones son necesarias por dos razones: primero, porque hay muchas formas de violencia sexual; segundo, que la encuesta permite listar hasta tres tipos de agresor.
 quienes$padre <- ifelse(quienes$p11_13_1_1==1 | 
                         quienes$p11_13_1_2==1 | 
                         quienes$p11_13_1_3==1 | 
@@ -499,7 +499,7 @@ porc <- rbind.data.frame(prop.wtable(quienes$padre,w=quienes$fac_muj),
 # Aplicamos esta secuencia para deshacernos de los porcentajes que no corresponden a la respuesta de un agresor.
 porc$quien <- seq(0,3,1)
 porc <- filter(porc, quien==1)
-# Acá hay que ser extra cuidadosas: si no incluimos una categoría, la gráfica va a estar mal; si alteramos el orden, la gráfica va a estar mal.
+# En este punto hay que ser especialmente cuidadosas: si no incluimos una categoría, la gráfica va a estar mal; si alteramos el orden, la gráfica va a estar mal.
 porc$quien <- c("padre", "madre", "padrastro/madrastra", "abuelx","hermanx","tix","primx","otrofam","vecinx/conocidx","desconocidx","otro")
 colnames(porc)[1] <- "porc"
 
@@ -521,14 +521,14 @@ ggplot(porc,
 ```
 ![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/embado_agresores.png)
 
-Tarea: para desglosar la información por agresor, escribe un código con dplyr. ¡Aguas! Acá es necesario tomar en cuenta el factor de expansión.
+Tarea: para desglosar la información por agresor, escribe un código con dplyr. ¡Cuidado! Para esto es necesario tomar en cuenta el factor de expansión.
 
 Copia y pega este comando en tu consola para deshacerte de todos los objetos que creamos: rm(list=ls(all=TRUE))
 
 #### Anticonceptivos
-Para este apartado utilizaremos la Encuesta Nacional de la Dinámica Demográfica (ENADID 2014); desafortunadamente, la ola correspondiente a 2018 apenas se levantará... Habrá que actualizar este análisis y hacer una comparación a lo largo del tiempo.
+Para este apartado utilizaremos la Encuesta Nacional de la Dinámica Demográfica (ENADID 2014). Desafortunadamente, la ola correspondiente a 2018 apenas se levantará... Habrá que actualizar este análisis y hacer una comparación a lo largo del tiempo.
 
-Al igual que en el apartado anterior, la base de datos que subimos al repositorio ya contiene únicamente las variables que nos interesan. Puedes descargar la [ENADID 2014 aquí](http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/especiales/enadid/2014/datosabiertos/enadid_2014_csv.zip); para seleccionar las variables que usamos, corre el siguiente código:
+Al igual que en el apartado anterior, la base de datos que subimos al repositorio contiene únicamente las variables que nos interesan. Puedes descargar la [ENADID 2014 aquí](http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/especiales/enadid/2014/datosabiertos/enadid_2014_csv.zip). Para seleccionar las variables que usamos, corre el siguiente código:
 ```{r}
 enadid2014 <- select(original, # dataframe que contiene la ENDIREH completa
                  llave_muj, ent, # id y geográficas
@@ -538,7 +538,7 @@ enadid2014 <- select(original, # dataframe que contiene la ENDIREH completa
                  starts_with("p8_2")) # conocimiento funcional de anticoncepción
 ```
 
-Uno de las falacias recurrentes respecto al embarazo adolescente y al acceso al aborto es que, dado que existen métodos anticonceptivos, las mujeres deberían "hacerse responsables" del producto del embarazo. Uno de los problemas con esta argumentación es que no considera si, efectivamente, el Estado cumple con dos obligaciones: primero, brindar la información pertinente al uso de anticoncepción; segundo, garantizar el acceso a ésta. En este apartado sólo nos enfocaremos a la evaluación del primer punto. Si quieres investigar más respecto a la necesidad insatisfecha de anticonceptivos —para mujeres en edad reproductiva y para mujeres adolescentes—, te recomendamos visitar este sitio de [CONAPO](http://www.conapo.gob.mx/en/CONAPO/Necesidad_Insatisfecha_de_uso_de_metodos_anticonceptivos_2009_y_2014)
+Una de las falacias recurrentes respecto al embarazo adolescente y al acceso al aborto es que, dado que existen métodos anticonceptivos, las mujeres deberían "hacerse responsables" del producto del embarazo. Uno de los problemas con esta argumentación es que no considera si el Estado cumple de manera efectiva con dos obligaciones: brindar la información pertinente al uso de anticoncepción y garantizar el acceso a ésta. En este apartado sólo nos enfocaremos en la evaluación del primer punto. Si quieres investigar más respecto a la necesidad insatisfecha de anticonceptivos —para mujeres en edad reproductiva y para mujeres adolescentes—, te recomendamos visitar este sitio de [CONAPO](http://www.conapo.gob.mx/en/CONAPO/Necesidad_Insatisfecha_de_uso_de_metodos_anticonceptivos_2009_y_2014)
 
 Ahora sí, abramos nuestra data:
 ```{r}
@@ -546,12 +546,12 @@ Ahora sí, abramos nuestra data:
 enadid2014 <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/enadid_limpia.csv")
 ```
 
-La ENADID 2014 cuenta con dos tipos de preguntas que nos interesan: el conocimiento general de los métodos anticonceptivos ("¿Quisiera usted decirme de qué métodos o medios ha oído hablar?") y el conocimiento funcional de éstos (es decir, si la mujer conoce cómo utilizarlos de forma correcta). Dado que la edad es una variable muy importante en este tema, nuestro análisis se centrará en ésta.
+La ENADID 2014 cuenta con dos tipos de preguntas que nos interesan: el conocimiento general de los métodos anticonceptivos ("¿Quisiera usted decirme de qué métodos o medios ha oído hablar?") y el conocimiento funcional de éstos (es decir, si la mujer conoce cómo utilizarlos de forma correcta). Dado que la edad es una variable muy importante en este tema, nuestro análisis se centrará en este dato.
 ```{r}
-# Seleccionemos nuestras variables
+# Seleccionemos nuestras variables.
 anticon <- select(enadid2014, starts_with("p8_"), fac_per)
 anticon$edad <- enadid2014$p5_2
-# Sólo nos interesan mujeres en edad reproductiva
+# Sólo nos interesan mujeres en edad reproductiva.
 anticon <- subset(anticon, edad<50)
 ```
 
@@ -561,12 +561,12 @@ anticon$algun_anti <- ifelse(anticon$p8_1_01>2 & anticon$p8_1_02>2 & anticon$p8_
                          0,1)
 ```
 
-El 98.61 de las mujeres en edad reproductiva conoce algún tipo de método anticonceptivo (operaciones, pastillas, óvulos, condones, parches, implantes, entre otros)
+El 98.61% de las mujeres en edad reproductiva conoce algún tipo de método anticonceptivo (operaciones, pastillas, óvulos, condones, parches, implantes, entre otros).
 ```{r}
 prop.wtable(anticon$algun_anti,w=anticon$fac_per,digits = 2,na = F)
 ```
 
-Podemos clasificar la anticoncepción en tres categorías: anticoncepción natural, anticoncepción de emergencia y métodos anticonceptivos. Con lo que hemos revisado hasta ahora, ya estás plenamente capacitada para poder: uno, crear variables de conocimiento general para cada categoría; dos, imprimir los porcentajes de éstos; tres, hacer una gráfica sencilla con esta comparación. Pista: consulta el cuestionario de la [ENADID acá](http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/especiales/enadid/2014/doc/mujer_enadid14.pdf). Escribe tu código y compara con el mío al final de este bash.
+Podemos clasificar la anticoncepción en tres categorías: anticoncepción natural, anticoncepción de emergencia y métodos anticonceptivos. Con lo que hemos revisado hasta ahora, ya estás plenamente capacitada para: 1) crear variables de conocimiento general para cada categoría; 2) imprimir los porcentajes de éstos, y 3) hacer una gráfica sencilla con esta comparación. Pista: consulta el cuestionario de la [ENADID aquí](http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/especiales/enadid/2014/doc/mujer_enadid14.pdf). Escribe tu código y compáralo con el mío al final de este bash.
 ```{r}
 
 
@@ -616,7 +616,7 @@ anticoncepcion$antis <- c("Anticoncepción natural",
                           "Anticoncepción de emergencia",
                           "Métodos anticonceptivos")
 
-# Innovemos un poquito con la gráfica: hagamos un lollipop
+# Innovemos un poco con la gráfica: hagamos un lollipop
 fiuf <- "Conocimiento general de tipos de antinconcepción"
 fiuff <- "Mujeres en edad reproductiva"
 ggplot(anticoncepcion, 
@@ -644,7 +644,7 @@ anticon$func_anti <- ifelse(anticon$p8_2_03_1==1 & anticon$p8_2_03_2==1 & antico
                             1,0)
 ```
 
-El 25.78% de la mujeres que tienen un conocimiento general de métodos anticonceptivos, sabe cómo funcionan éstos correctamente.
+El 25.78% de las mujeres que tienen un conocimiento general de métodos anticonceptivos, sabe cómo funcionan éstos correctamente.
 ```{r}
 metanti <- filter(anticon,
                   algun_metanti==1)
@@ -652,7 +652,7 @@ prop.wtable(metanti$func_anti,w=metanti$fac_per,na=F,digits = 2)
 rm(metanti)
 ```
 
-Creemos los grupos de edad y visualicemos una gráfica que compare el conocimiento general vs. el funcional por edad.
+Creemos los grupos de edad y visualicemos una gráfica que compare el conocimiento general con el funcional, por edad.
 ```{r}
 anticon$grupos_edad <- ifelse(anticon$edad<20, "Adolescentes (15- 19 años)",
                               ifelse(anticon$edad>19 & anticon$edad<30, "Jóvenes (20-29 años)",
@@ -694,7 +694,7 @@ Copia y pega este comando en tu consola para deshacerte de todos los objetos que
 #### Evaluación ENAPEA
 La Estrategia Nacional para la Prevención del Embarazo Adolescente, implementada desde 2015, tiene dos objetivos: primero, reducir en 50% la tasa de fecundidad de las adolescentes entre 15 a 19 años; segundo, erradicar embarazos en niñas de 14 años o menos. Dado que es muy pronto para emitir una evaluación integral de esta política pública, nos limitaremos a observar esta tendencia a lo largo del tiempo y por entidad federativa.
 
-Hay muchas formas de analizar esta información: por entidad de ocurrencia, por entidad de registro, por residencia habitual de la madre, etcétera. Elige bien a tu guerrero. Acá trabajaremos con la variable de residencia habitual; los datos son descargables desde los [tabulados de natalidad del INEGI](http://www.beta.inegi.org.mx/app/tabulados/pxweb/inicio.html?rxid=fdd12ae8-d551-46fd-a8b5-b5b159c1c3ea&db=Natalidad&px=Natalidad_2).
+Hay muchas formas de analizar esta información: por entidad de ocurrencia, por entidad de registro, por residencia habitual de la madre, etcétera. Elige bien con cuál quieres trabajar. Aquí trabajaremos con la variable de residencia habitual. Los datos son descargables desde los [tabulados de natalidad del INEGI](http://www.beta.inegi.org.mx/app/tabulados/pxweb/inicio.html?rxid=fdd12ae8-d551-46fd-a8b5-b5b159c1c3ea&db=Natalidad&px=Natalidad_2).
 ```{r}
 embado <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/porc_embado.csv")
 data <- data.frame(embado$entidad)
@@ -702,7 +702,7 @@ n <- 6
 data <- do.call("rbind", replicate(n, data, simplify = FALSE))
 data$anio <- rep(2012:2017, times=1, each=32)
 
-# Y ahora asignaremos cada valor a su respectiva entidad
+# Ahora asignaremos cada valor a su respectiva entidad.
 embado <- embado[c(-1)]
 embado <-  tidyr::gather(embado)
 data$embado <- embado$value
@@ -711,7 +711,7 @@ colnames(data)[1] <- "entidad"
 col1 = "#D9E1F1" 
 col2 = "#325694"
 
-# ploteamos
+# Ploteamos
 ggplot(data = data, 
        aes(x = anio, y = fct_rev(entidad))) + 
   geom_tile(aes(fill = embado), colour = "white") +
@@ -723,14 +723,14 @@ ggplot(data = data,
 ```
 ![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/embado_ent.png)
 
-Ahora, ¿será que ésta es la mejor forma de procesar los datos de embarazo adolescente? ¿cuál crees que sea el problema en utilizar residencia habitual de la madre? ¿qué variable geográfica crees que sea más precisa? En nuestro informe utilizamos lugar de ocurrencia, descarga los datos [aquí](http://www.inegi.org.mx/sistemas/olap/Proyectos/bd/continuas/natalidad/nacimientos.asp) y juega con ellos.
+Aquí nos preguntarmos si ésta será la mejor forma de procesar los datos de embarazo adolescente. ¿Cuál crees que sea el problema en utilizar residencia habitual de la madre? ¿Qué variable geográfica crees que sea más precisa? En nuestro informe optamos por utilizar lugar de ocurrencia. Descarga los datos [aquí](http://www.inegi.org.mx/sistemas/olap/Proyectos/bd/continuas/natalidad/nacimientos.asp) y juega con ellos.
 
 Copia y pega este comando en tu consola para deshacerte de todos los objetos que creamos: rm(list=ls(all=TRUE))
 
 ***
 
-### Muerte Materna
-En el año 2000, uno de los Objetivos de Desarrollo del Milenio (ODM), propuestos por la Organización de Naciones Unidas y firmados por México, fue reducir la mortalidad materna en 75%; es decir, registrar alrededor de 22 muertes maternas por cada 100 mil nacidos vivos. ¿Se habrá cumplido el objetivo?
+### Muerte materna
+En el año 2000, uno de los Objetivos de Desarrollo del Milenio (ODM), propuestos por la Organización de Naciones Unidas y firmados por México, fue reducir la mortalidad materna en 75%. Es decir, no superar 22 muertes maternas por cada 100 mil nacidos vivos. ¿Se habrá cumplido el objetivo?
 
 Abrimos nuestra data:
 ```{r}
@@ -738,8 +738,8 @@ mm <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/ma
 ```
 
 Esta base de datos fue construida con base en dos fuentes:
-* Los datos reportados entre 2002 y 2014, corresponden a los calculados por el Observatorio de Muerte Materna (OMM). El OMM utiliza datos reportados por la Secretaría de Salud.
-* Los datos reportados en 2015 y 2016, fueron calculados con base en las estadísticas de natalidad y defunciones para calcular la muerte materna de INEGI, pues la información usada por el OMM (estadísticas reportadas por Secretaría de Salud) no se encontraba disponible.
+* Los datos reportados entre 2002 y 2014 corresponden a los calculados por el Observatorio de Muerte Materna (OMM). El OMM utiliza datos reportados por la Secretaría de Salud.
+* Los datos correspondientes a 2015 y 2016 fueron obtenidos con base en las Defunciones para Calcular la Razón de Mortalidad Materna, reportadas por el INEGI, pues la información usada por el OMM (estadísticas de la Secretaría de Salud) no se encontraba disponible.
 
 Ahora, nos vamos a quedar con un objeto que sólo tenga la RMM nacional:
 ```{r}
@@ -751,7 +751,7 @@ colnames(mm_nac) <- "mm_nac"
 mm_nac$anio <- seq(2002,2016,1)
 ```
 
-El objetivo lo podemos sacar al resolver una ecuación bastante sencilla: primero, nuestras "x" son los años y nuestras "y" es la Razón de Muerte Materna; segundo, tenemos las coordenadas de dos puntos de nuestra línea objetivo:
+El objetivo lo podemos obtener a través de una ecuación bastante sencilla: primero, nuestras "x" son los años y nuestras "y" es la Razón de Muerte Materna; segundo, tenemos las coordenadas de dos puntos de nuestra línea objetivo:
 $x~1~ = 2002; x~2~ = 2015$
 $y~1~ = 54.18; y~2~ = 22$
 Por lo tanto, podemos obtener la pendiente "m" si resolvemos la siguiente ecuación:
@@ -768,7 +768,7 @@ eq = function(x){
 }
 ```
 
-Ésta es nuestra línea objetivo
+Ésta es nuestra línea objetivo:
 ```{r}
 ggplot(data.frame(x=c(0, 10)), aes(x=x)) + 
   stat_function(fun=eq, geom="line", size=1.5) +
@@ -795,19 +795,19 @@ ggplot(data=mm_nac, aes(anio)) +
 
 Otro factor importante que analizar es la RMM por entidad federativa. Esta información ya la tenemos en nuestro df "mm".
 
-Una forma bonita para visualizarla es hacer un mapa de calor. Tenemos que crear un dataframe adecuado para hacerlo.
+Una forma atractiva para visualizarla es a través de un mapa de calor. Tenemos que crear un dataframe adecuado para hacerlo.
 ```{r}
-# Dropeamos el nacional
+# Desechamos el nacional.
 mm <- mm[1:32,]
-# Creamos un dataframe con entidades y años en columnas
+# Creamos un dataframe con entidades y años en columnas.
 data <- data.frame(mm$Entidad)
 colnames(data) <- "entidad"
 n <- 15
 data <- do.call("rbind", replicate(n, data, simplify = FALSE))
-# Agregamos los años para cada entidad
+# Agregamos los años para cada entidad.
 data$anio <- rep(2002:2016, times=1, each=32)
 
-# Y ahora asignaremos cada valor a su respectiva entidad
+# Y ahora asignaremos el valor respectivo a cada entidad.
 mm <- mm[c(-1)]
 mm <-  tidyr::gather(mm)
 data$rmm <- mm$value
@@ -834,31 +834,31 @@ Copia y pega este comando en tu consola para deshacerte de todos los objetos que
 ***
 
 ### Violencia obstétrica
-#### Manifestaciones de VOB
-Para analizar los datos de violencia obstétrica en México, utilizaremos la Encuesta Nacional sobre la Dinámica de las Relaciones (ENDIREH 2016). El marco muestral de esta encuesta son mujeres mayores de 15 años de edad; la representatividad es nacional y estatal: es posible desglosar la información por entidad federativa.
+#### Manifestaciones de Violencia Obstétrica (VOB)
+Para analizar los datos de violencia obstétrica en México, utilizaremos la Encuesta Nacional sobre la Dinámica de las Relaciones (ENDIREH 2016). El marco muestral de esta encuesta son mujeres mayores de 15 años de edad; la representatividad es nacional y local: es posible desglosar la información por entidad federativa.
 ```{r}
 endireh2016 <- read.csv("https://raw.githubusercontent.com/Giremx/justiciareproductiva/master/endireh_limpia.csv")
 ```
 
 El cuestionario de esta encuesta está disponible [aquí](http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/especiales/endireh/2016/doc/endireh2016_cuestionario_a.pdf).
-Esta encuesta contiene varias preguntas respecto a si las mujeres han sufrido violencia obstétrica (preguntas 9.8). Si bien es necesario analizar las distintas manifestaciones de este fenómeno, el análisis agregado también es útil. Por lo tanto, seleccionaremos las preguntas relacionadas a este problema y crearemos la variable "alguna" que nos indica si una mujer ha sufrido algún tipo de violencia obstétrica.
+Esta encuesta contiene varias preguntas respecto a si las mujeres han sufrido violencia obstétrica (preguntas 9.8). Si bien es necesario analizar las distintas manifestaciones de este fenómeno, el análisis agregado también es útil. Por lo tanto, seleccionaremos las preguntas relacionadas con este problema y crearemos la variable "alguna" que nos indica si una mujer ha sufrido algún tipo de violencia obstétrica.
 ```{r}
-# Selección de preguntas y creación del dataframe "vob"
+# Selección de preguntas y creación del dataframe "vob".
 vob <- select(endireh2016, starts_with("p9_8"), fac_muj, nom_ent, edad, p9_2,upm,estrato)
 # p9_2 indica si la mujer estuvo embarazada en los últimos 5 años
 vob <- subset(vob, p9_2==1)
-# Creamos variable "alguna"
+# Creamos variable "alguna".
 vob$alguna <- ifelse(vob$p9_8_1>1 & vob$p9_8_2>1 & vob$p9_8_3>1 & vob$p9_8_4>1 & vob$p9_8_5>1 & vob$p9_8_6>1 & vob$p9_8_7>1 & vob$p9_8_8>1 & vob$p9_8_9>1 & vob$p9_8_10>1, 0, 1)
 ```
 
-Esta variable nos indica que el 29.93% de las mujeres que estuvieron embarazadas —en los últimos cinco años— reportan haber sufrido un tipo de violencia obstétrica.
+Esta variable nos indica que 29.93% de las mujeres que estuvieron embarazadas en los últimos cinco años reportan haber sufrido algún tipo de violencia obstétrica.
 ```{r}
 prop.wtable(vob$alguna,w=vob$fac_muj,dir=0,digits=2,mar=TRUE,na=FALSE)
 ```
 
-Respecto a las distintas manifestaciones de violencia obstétrica, crearemos un dataframe con los porcentajes de cada una para, posteriormente, visualizar todo en una sencilla gráfica. En esta parte usaremos el comando prop.wtable para obtener porcentajes ponderados; sin embargo, como se mostrará en otra parte del código, es una mejor práctica utilizar dplyr. Si ya pasaste por esta lección en alguno de nuestros otros módulos, ignora el siguiente código y escríbelo directo en dplyr.
+Respecto a las distintas manifestaciones de violencia obstétrica, crearemos un dataframe con los porcentajes de cada una para, después, visualizar todo en una sencilla gráfica. Usaremos el comando prop.wtable para obtener porcentajes ponderados. Sin embargo, como se mostrará en otra parte del código, es una mejor práctica utilizar dplyr. Si ya pasaste por esta lección en alguno de nuestros otros módulos, ignora el siguiente código y escríbelo directo en dplyr.
 ```{r}
-# Nos quedamos con las mujeres que reportaron haber sufrido algún tipo de violencia obstétrica.
+# Empleamos los datos de las mujeres que reportaron haber sufrido algún tipo de violencia obstétrica.
 vob_si <- subset(vob, alguna==1)
 weight_si <- vob_si$fac_muj
 # porc es un dataframe con los porcentajes de tipos de violencia obstétrica reportados
@@ -892,7 +892,7 @@ detach(porc)
 # Colores
 col1 = "#D9E1F1" 
 col2 = "#325694"
-# Ploteamos bonito
+# Ploteamos 
 ggplot(new_porc,
        aes(x = reorder(tipo,-porcent),
            y = porcent,
@@ -913,7 +913,7 @@ ggplot(new_porc,
 ```
 ![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/vob_manifest.png)
 
-Como se mencionó, el análisis por entidad federativa es posible y necesario. Exploremos cuántos son los casos de violencia obstétrica por entidad federativa: desglosaremos por entidad federativa. Por ejemplo, en Aguascalientes, el 29.93% de las mujeres reportan haber sufrido violencia obstétrica.
+Como se mencionó, el análisis por entidad federativa es posible y necesario. Exploremos cuántos son los casos de violencia obstétrica por entidad federativa: desglosaremos. Por ejemplo, en Aguascalientes, 29.93% de las mujeres reportan haber sufrido violencia obstétrica.
 ```{r}
 weight <- vob$fac_muj
 prop.wtable(vob$alguna,vob$nom_ent=="Aguascalientes",w=weight,dir=0,digits=2,mar=TRUE,na=FALSE)
@@ -921,7 +921,7 @@ prop.wtable(vob$alguna,vob$nom_ent=="Aguascalientes",w=weight,dir=0,digits=2,mar
 
 Creemos un dataframe con los porcentajes, por entidad federativa. Aquí usaremos dplyr.
 ```{r}
-# Agrupamos por entidad
+# Agrupamos por entidad.
 vob$alguna <- as.numeric(vob$alguna)
 vob_ent <- vob %>%
   select(alguna, fac_muj, nom_ent)%>%
@@ -932,7 +932,7 @@ vob_ent <- vob %>%
   select(nom_ent, porcentaje)
 ```
 
-Las entidades con mayor porcentaje de violencia obstétrica son: Estado de México (33.67%), Ciudad de México (32.88%) y Tlaxcala (31.89%). Podemos hacer un sencillo plot para visualizar todas las entidades.
+Las entidades con mayor porcentaje de violencia obstétrica son el estado de México (33.67%), la Ciudad de México (32.88%) y Tlaxcala (31.89%). Podemos hacer un plot sencillo para visualizar todas las entidades.
 ```{r}
 # Colores
 col1 = "#D9E1F1" 
@@ -956,7 +956,7 @@ ggplot(data = vob_ent,
 ```
 ![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/vob_ent.png)
 
-Ahora haremos un perfil de aquellas mujeres que sufren violencia obstétrica por características socio-económicas:
+Ahora realizaremos un perfil de aquellas mujeres que sufren violencia obstétrica por características socio-económicas:
 * Condición laboral
 * Edad
 * Auto-adscripción indígena
@@ -977,7 +977,7 @@ vob$lug_at_med <- endireh2016$p9_7
 vob <- subset(vob, p9_2==1)
 ```
 
-Condición laboral: no parece haber grandes diferencias entre mujeres que trabajan y aquéllas que no trabajan (30.3% y 29.7%, respectivamente).
+Condición laboral: no parece haber grandes diferencias entre las mujeres que trabajan y aquéllas que no trabajan (30.3% y 29.7%, respectivamente).
 ```{r}
 vob$cond_lab[vob$cond_lab == 9] <- NA
 vob_trabaja <- subset(vob, cond_lab==1)
@@ -987,7 +987,7 @@ prop.wtable(vob_trabaja$alguna,w=vob_trabaja$fac_muj,na = FALSE)
 prop.wtable(vob_notrabaja$alguna,w=vob_notrabaja$fac_muj,na = FALSE)
 ```
 
-Edad: haremos el mismo análisis por grupos de edades. Respecto a esta característica, sí parece haber diferencias significativas: las jóvenes y adolescentes son el grupo poblacional más afectada por este problema.
+Edad: haremos el mismo análisis por grupos de edades. En esta variable, sí parece haber diferencias significativas: las jóvenes y adolescentes son el grupo poblacional más afectado por este problema.
 ```{r}
 vob$edad[vob$edad == 99] <- NA
 vob$edad[vob$edad == 98] <- NA
@@ -1023,7 +1023,7 @@ ggplot(data = violencia,
 ```
 ![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/vob_edad.png)
 
-Auto-adscripción indígena: el 29.9% de las mujeres auto-adscritas como indígenas reportan haber sufrido un tipo de violencia obstétrica, este porcentaje es muy similar al reportado por mujeres no indígenas (29.94%). Esto se puede deber a un sesgo en el que las personas indígenas tienden a no reportar esta característica (o no identificarse como tal), dados los estereotipos relacionados con ésta.
+Auto-adscripción indígena: 29.9% de las mujeres auto-adscritas como indígenas reportan haber sufrido un tipo de violencia obstétrica. Este porcentaje es muy similar al reportado por mujeres no indígenas (29.94%). Lo anterior puede deberse a un sesgo en el que las personas indígenas tienden a no reportar esta característica (o no identificarse como tales), dados los estereotipos relacionados con ello.
 ```{r}
 ind <- subset(vob, indigena==1)
 noind <- subset(vob, indigena==2)
@@ -1031,7 +1031,7 @@ prop.wtable(ind$alguna,w=ind$fac_muj,na=FALSE,digits = 2)
 prop.wtable(noind$alguna,w=noind$fac_muj,na=FALSE,digits = 2)
 ```
 
-La ENDIREH también nos permite desglosar el fenómeno de violencia obstétrica por lugar de atención médica. El siguiente código no está en dplyr. Date a la tarea de arreglarlo
+La ENDIREH también nos permite desglosar el fenómeno de violencia obstétrica por lugar de atención médica. El siguiente código no está en dplyr. Date a la tarea de arreglarlo:
 ```{r}
 vob$lug_at_med[vob$lug_at_med == 99] <- NA
 vob$lug_at_med[vob$lug_at_med == 99] <- NA
@@ -1086,9 +1086,9 @@ ggplot(data= data,
 ```
 ![](https://github.com/Giremx/justiciareproductiva/raw/master/graficas_informe2018/vob_lugatmed.png)
 
-Sí existen diferencias importantes en los reportes de violencia obstétrica por lugar de atención. Al observar los porcentajes, podríamos plantear que las mujeres que pueden costear una clínica privada, tienden a sufrir este problema en menor medida que aquéllas que optan por atención pública.
+Existen diferencias importantes en los reportes de violencia obstétrica por lugar de atención. Al observar los porcentajes, podríamos plantear que las mujeres que pueden costear una clínica privada, tienden a sufrir este problema en menor medida que aquéllas que optan por atención pública.
 
-Esta encuesta también nos proporciona información respecto a consentimiento en los procedimientos de césares y los índices de cesáreas practicadas por lugar de atención médica y entidad federativa. Se reportó que al 9.69% de las mujeres a las que se le practicó una césarea no se le pidió autorización para llevarlo a cabo.
+Esta encuesta también nos proporciona información respecto a consentimiento en los procedimientos de césares y los índices de cesáreas practicadas por lugar de atención médica y entidad federativa. Se reportó que a 9.69% de las mujeres a las que se le practicó una césarea no se le pidió autorización para ello.
 ```{r}
 prop.wtable(vob$p9_8_13,w=vob$fac_muj,na=FALSE,digits = 2)
 ```
